@@ -1,0 +1,318 @@
+<!--
+  Corporate 360 · News & Market Intelligence
+  Account: Petronas Chemicals Group (PCHEM) — Malaysia
+  ------------------------------------------------------------
+  Drop-in panel for a 360 view. White background. Four lenses as
+  filter tabs: All / Petronas Chemicals / Macro Economics /
+  Competitor / Country & Market. A live KPI "data" strip shows on
+  the company + all views. All links open in a new tab.
+  Malaysia macro/market links are the supplied Google News RSS
+  redirects; company & competitor links are direct article URLs.
+-->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<div id="nf360" style="
+  --ink:#1a2332; --ink-soft:#5b6577; --line:#e6e8ec; --bg:#ffffff;
+  --bg-soft:#f7f8fa; --accent:#157a5b; --accent-d:#0f5c44;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  color:var(--ink); background:var(--bg); border:1px solid var(--line);
+  border-radius:12px; overflow:hidden;">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:1px solid var(--line);">
+    <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+      <span style="width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block;flex:none;"></span>
+      <span style="font-weight:700;font-size:15px;">News &amp; Market Intelligence</span>
+      <span style="background:#e8f5ef;color:var(--accent-d);font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap;">Petronas Chemicals · Malaysia</span>
+    </div>
+    <button id="nf-refresh" title="Refresh" style="width:32px;height:32px;border-radius:7px;border:1px solid var(--line);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none;">
+      <svg id="nf-spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    </button>
+  </div>
+
+  <!-- Filter tabs (the four lenses) -->
+  <div id="nf-tabs" style="display:flex;gap:6px;padding:12px 16px;flex-wrap:wrap;border-bottom:1px solid var(--line);background:var(--bg);">
+    <button class="nf-tab" data-cat="all">All</button>
+    <button class="nf-tab" data-cat="company">Petronas Chemicals</button>
+    <button class="nf-tab" data-cat="macro">Macro Economics</button>
+    <button class="nf-tab" data-cat="competitor">Competitor</button>
+    <button class="nf-tab" data-cat="country">Country &amp; Market</button>
+  </div>
+
+  <!-- Meta bar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 20px;background:var(--bg-soft);border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink-soft);">
+    <div style="display:flex;align-items:center;gap:6px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>Last updated: 22 Jun 2026, 11:20 am MYT</span>
+    </div>
+    <div id="nf-count">— results</div>
+  </div>
+
+  <!-- Feed (data strip + items injected here) -->
+  <div id="nf-list" style="max-height:700px;overflow:auto;"></div>
+</div>
+
+<style>
+  @keyframes nfspin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  #nf360 .nf-tab{border:1px solid var(--line);background:var(--bg);color:var(--ink-soft);font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:20px;cursor:pointer;transition:.15s;}
+  #nf360 .nf-tab:hover{border-color:#c9ced6;color:var(--ink);}
+  #nf360 .nf-tab.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  #nf360 .nf-item:last-child{border-bottom:none;}
+  #nf360 .nf-item:hover{background:#fafbfc;}
+  #nf360 .topic:hover{background:#e2e6ec;}
+  #nf360 .view-more:hover{color:var(--accent-d);}
+  #nf360 .read-original:hover{color:var(--ink);}
+  #nf360 .kpi{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:11px 13px;}
+</style>
+
+<script>
+(function(){
+  const CAT = {
+    company:    {label:"Petronas Chemicals", bg:"#e8f5ef", fg:"#0f5c44"},
+    macro:      {label:"Macro Economics",    bg:"#eaf1fb", fg:"#1f5bb5"},
+    competitor: {label:"Competitor",         bg:"#fdeee6", fg:"#b5531f"},
+    country:    {label:"Country & Market",   bg:"#f1ecfb", fg:"#7a4fb5"}
+  };
+
+  // -------- PCG KPI data strip (Q1 FY26 + market data) --------
+  const KPI = [
+    {l:"Consensus Target", v:"RM 7.05", s:"range RM2.90–7.05"},
+    {l:"Market Cap",       v:"RM 42.7b", s:"KLSE: PCHEM (5183)"},
+    {l:"Q1'26 Revenue",    v:"RM 7.02b", s:"−8.4% YoY"},
+    {l:"Q1'26 Net Profit", v:"RM 401m", s:"vs RM18m loss 1Q25"},
+    {l:"Q1'26 EPS",        v:"RM 0.05", s:"beat est. by 44%"},
+    {l:"Profit Margin",    v:"5.7%", s:"back in the black"},
+    {l:"Dividend Yield",   v:"1.31%", s:"paid semi-annually"},
+    {l:"Next Results",     v:"25 Aug 2026", s:"Q2 FY26"}
+  ];
+
+  function dataStrip(){
+    const tiles = KPI.map(k =>
+      `<div class="kpi">
+         <div style="font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;">${k.l}</div>
+         <div style="font-size:16px;font-weight:700;margin-top:5px;">${k.v}</div>
+         <div style="font-size:10.5px;color:var(--ink-soft);margin-top:2px;">${k.s}</div>
+       </div>`).join('');
+    return `
+      <div style="padding:16px 20px;border-bottom:1px solid var(--line);background:#fbfdfc;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px;">
+          <span style="background:#e8f5ef;color:var(--accent-d);font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:3px 9px;border-radius:6px;">Company Data — PCHEM</span>
+          <span style="font-size:11px;color:var(--ink-soft);">Petronas Chemicals Group Berhad · subsidiary of PETRONAS</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px;">${tiles}</div>
+        <div style="font-size:10.5px;color:var(--ink-soft);margin-top:10px;">Indicative figures from public market sources (Bursa filings, analyst notes). For reference only — verify before use.</div>
+      </div>`;
+  }
+
+  const items = [
+    // ================= PETRONAS CHEMICALS (company) =================
+    { cat:"company", icon:"📈",
+      title:"PCG Returns to Profit in Q1 FY26: Net Profit RM401m, EPS RM0.05",
+      topics:["Earnings","Q1 FY26","Margins"],
+      source:"Simply Wall St", date:"May 2026",
+      summary:"Petronas Chemicals swung back to profit in 1Q 2026 with net income of RM401m and EPS of RM0.05, versus a small loss a year earlier, on a 5.7% margin. Revenue of RM7.02b fell 8.4% year-on-year and missed estimates by about 16%, but the move to profitability — driven by lower expenses and better plant efficiency — sent EPS 44% above forecasts.",
+      url:"https://simplywall.st/stocks/my/materials/klse-pchem/petronas-chemicals-group-berhad-shares" },
+
+    { cat:"company", icon:"🏭",
+      title:"PETRONAS' Aramco Stake Buy Could Set Stage for PCG's Pengerang Exit — CGS",
+      topics:["Pengerang","Divestment","Feedstock"],
+      source:"The Edge / CGS International (via i3investor)", date:"28 May 2026",
+      summary:"CGS International says PETRONAS taking full ownership of PRefChem could be a precursor to acquiring PCG's 50% stake in Pengerang Petrochemical Company. Exiting the loss-making, naphtha-based Pengerang operations would be a major earnings swing factor, letting PCG lean back on lucrative ethane/methane gas feedstock.",
+      url:"https://klse.i3investor.com/web/stock/overview/5183" },
+
+    { cat:"company", icon:"💹",
+      title:"Analysts Turn More Optimistic; Consensus Price Target Lifted to RM7.05",
+      topics:["Analyst View","Valuation","Upgrade"],
+      source:"Yahoo Finance / analyst consensus", date:"May 2026",
+      summary:"Following the Q1 beat, brokers raised earnings estimates and the consensus 12-month target sits around RM7.05 (bullish RM7.05, bearish RM2.90). One house lifted FY26 earnings sharply and upgraded the stock from Sell to Hold, arguing PCG's domestic gas feedstock lets it benefit from Hormuz-driven price spreads while naphtha-based peers face cost inflation.",
+      url:"https://finance.yahoo.com/markets/stocks/articles/results-petronas-chemicals-group-berhad-005704231.html" },
+
+    // ================= COMPETITOR =================
+    { cat:"competitor", icon:"📉",
+      title:"Lotte Chemical Titan Logs Largest Quarterly and Full-Year Loss on Record",
+      topics:["LCTITAN","Impairment","Glut"],
+      source:"The Edge Malaysia", date:"26 Feb 2026",
+      summary:"LCT's 4Q25 net loss widened to RM1.67b — its biggest on record — on a RM1.4b impairment and margin-spread compression, even as revenue rose 43% to RM2.57b from the new LINE project in Indonesia. Shares hit a historic low; Maybank IB stayed bearish, warning the glut will persist as China keeps adding capacity.",
+      url:"https://theedgemalaysia.com/node/794070" },
+
+    { cat:"competitor", icon:"⚠️",
+      title:"Lotte Chemical Titan Warns Middle East Tensions Cloud Petrochemical Outlook",
+      topics:["LCTITAN","Geopolitics","1Q26"],
+      source:"The Star", date:"7 May 2026",
+      summary:"LCT said the Iran war continues to weigh on the global petrochemical industry, creating a volatile, uncertain environment. Its 1Q26 net loss narrowed only marginally to RM122.7m. Management pledged to navigate the cycle with prudence while holding position in Malaysia, Indonesia and Southeast Asia.",
+      url:"https://www.thestar.com.my/business/business-news/2026/05/07/lotte-chemical-titan-warns-middle-east-tensions-cloud-petrochemical-outlook" },
+
+    { cat:"competitor", icon:"🌫️",
+      title:"Sector Glut Persists: Analysts Stay Bearish on Olefin Spreads",
+      topics:["Sector","Naphtha Spreads","Supply"],
+      source:"The Edge Malaysia", date:"26 Feb 2026",
+      summary:"Brokers flag a 'double whammy' for naphtha-based producers — weak olefin prices from oversupply and elevated naphtha costs. HDPE-naphtha spreads below US$300/tonne risk gross losses for some peers. South Korea's first major petrochemical restructuring (capacity integration, temporary cracker shutdowns) is cited as a possible medium-term relief for regional spreads.",
+      url:"https://theedgemalaysia.com/node/794105" },
+
+    // ================= MACRO ECONOMICS =================
+    { cat:"macro", icon:"🛢️",
+      title:"How Badly Has the Iran War Hit the Global Economy? The Tell-Tale Signs",
+      topics:["Iran War","Energy","Global"],
+      source:"Al Jazeera", date:"16 Mar 2026",
+      summary:"A read on how the 2026 Middle East conflict is rippling through energy prices, shipping and inflation worldwide — the key macro driver behind both higher petrochemical feedstock costs and the price spreads that can lift gas-advantaged producers.",
+      url:"https://news.google.com/rss/articles/CBMirAFBVV95cUxOanJDaTRDOHdPZUFTQkpBMV9vdS1uU1pIcFFwMUJkV0s0NVpWVXFLRE1aRGI0bTNyT1VxOFdaX1l3YTNBUjNRWWltYmN4RjRWQUJXalcxRkx4OWJBbFkyR09wZlg4U2lFM0ZKaUpIMUJsbHp4cFpLWldRM1p3cE9hQk9GMkczdnNzUGtrbHFrc25VdUpRVjlXMW5mS21GaVViQUp0OHQzakFJNmhH0gGyAUFVX3lxTFBxdmJDeEUtWG9FY3VVR0tIcTE3SXZuZUNFOXltZXRzX1pJYy1UOV9hM21SXzdvRjlYVnYyZnljNUlYQTMyellBWHJwdXEwQmY3R3hrUG1SZTZXU2lod0V2eUgzUnBJS2hIemZIREk4MGlyU1VuZmhVemVZYVBKSko1NF9VbmJJdjZYMmJ5TW5WZm9DY0ZpZ0txTTlhOF95X2YzWURxeXZEdUZEdl91UjhyZWc?oc=5" },
+
+    { cat:"macro", icon:"📉",
+      title:"IMF Cuts Growth Outlook, Warns World Drifting Toward More Adverse Scenario",
+      topics:["IMF","Growth","Risk"],
+      source:"Reuters", date:"15 Apr 2026",
+      summary:"The IMF trimmed its global growth forecast and cautioned that conditions are tilting toward a more adverse scenario — a demand-side risk for export-driven petrochemical volumes across Asia.",
+      url:"https://news.google.com/rss/articles/CBMivgFBVV95cUxOcmNiNzBrS0RzczdCcVIwbHZiUkpaZEZhM05IU2FFbWFjX21ZdlA1ampGV1lfM1lwX1l4SnM3dVY0VHBtLUdMY3ZneFpVVkVIbFNTVUllWHZUSDBKdUhpa1pWT3NVMGdSeFRaMFdENHlWc1prUFVma0JXZEhGSmtJaHl5MFRhX001QklYcEpxczltLUNfQXlETUdPNXNlTEhGTTVEand1WVg3QUF3R2Z3a2xMa1I5SXlIc1QwdmFB?oc=5" },
+
+    { cat:"macro", icon:"🏛️",
+      title:"Extended OPR Pause Signals Confidence in Malaysia's Economic Resilience",
+      topics:["BNM","OPR","Malaysia"],
+      source:"The Star", date:"7 May 2026",
+      summary:"Bank Negara Malaysia's continued hold on the Overnight Policy Rate is read as a vote of confidence in domestic resilience despite external energy and geopolitical shocks — supportive for domestic demand and corporate funding costs.",
+      url:"https://news.google.com/rss/articles/CBMiywFBVV95cUxQMG90VC1faW5YcmV4QnZuQ3d1cXZFQ1ZibDUzdnVKbUpyd09QVEI3MnVwZXNZWUhnVUxzWFJELTVEZHlZYjA4UjJuZWsxU20xZjZzRlVFTlM1SE9IVUJlQnVrNzZDam9qSWtOM3JTNmQ0QlJHQm5xVnRzalhMTVozcjFPUi0tYXpYQW5uYksyTDdYaWhDdHREeUZ2eWdRYXZhVktaNTJFYkxCQ0l3TldnTEV0YzQ3QXlPdEc0ZTIzUFNNTXJPajAxYnF1QQ?oc=5" },
+
+    { cat:"macro", icon:"🌏",
+      title:"Malaysia's Economy Benefitted From ASEAN Integration — BNM Governor",
+      topics:["ASEAN","BNM","Regional"],
+      source:"Bernama", date:"3 Jun 2026",
+      summary:"BNM's Governor highlighted how deeper ASEAN integration has strengthened Malaysia's regional resilience — relevant context for PCG's export markets across Southeast Asia, China and Indonesia.",
+      url:"https://news.google.com/rss/articles/CBMiWEFVX3lxTFAtclYxcE9JMGVRVjNHcGl2QllJV05iWjRTdTNnV0RhQVhKN2VTUFhqNWY1cVkyS05TOGhJcGNXZHZFeUN3aEpuQzQtQUFKZV9JSXQ2OG5LUmI?oc=5" },
+
+    { cat:"macro", icon:"🧭",
+      title:"The State of the Nation: Cautious Optimism on 2026 Growth With Phased Reforms",
+      topics:["Malaysia","Reforms","Outlook"],
+      source:"The Edge Malaysia", date:"13 Apr 2026",
+      summary:"A read on Malaysia's 2026 growth trajectory as phased subsidy and fiscal reforms roll out — shaping domestic input costs, consumer demand and the operating backdrop for industrial producers.",
+      url:"https://news.google.com/rss/articles/CBMiUEFVX3lxTE4xWkNzVGhQSDBJdGMtRGk3dzJ1VC0xNkV2TnpJaGZmSzZtRjdqcEtKZ25adkJ5dU5QRW1EdmU1cU5BeVloek1SQ0VfeEQyMXZw?oc=5" },
+
+    { cat:"macro", icon:"🏦",
+      title:"The World's Central Banks Are Wrestling With a Gigantic Problem",
+      topics:["Central Banks","Rates","Inflation"],
+      source:"The New York Times", date:"1 May 2026",
+      summary:"Major central banks face a tough trade-off between sticky inflation from the energy shock and slowing growth — the policy backdrop that drives currencies, financing costs and commodity demand globally.",
+      url:"https://news.google.com/rss/articles/CBMijwFBVV95cUxPWEFraEhWb0FlQlRJWVJWVnJfMEJNWFJURFU0SU9kMGtKWUtoYXoybDhienkzNjRtQ3RpdmVKeTZOQkpaVEVhTWM2NVduQlFwSXh6c1d0Qmx4XzJKUGg1dG5wTm9ZT25TalNLS3VNbDM5MmNaREN6X1lGN3FLcHp5VFhxdk9yd0ZwOWpLQzJSaw?oc=5" },
+
+    { cat:"macro", icon:"💱",
+      title:"China Moves to Boost the Use of the Yuan Globally",
+      topics:["China","Yuan","Trade"],
+      source:"The Wall Street Journal", date:"17 Jun 2026",
+      summary:"Beijing is pushing wider international use of the yuan — a structural shift with implications for regional trade settlement and demand from China, PCG's largest export destination alongside Malaysia and Indonesia.",
+      url:"https://news.google.com/rss/articles/CBMinwFBVV95cUxPbVItVnotRVZUUjBRTXo0OFNlZkVJekNIWFctbDhUYlZrNVZQNWVnakJJVDY4dmZfT1l4Mm1uNEEwekNWYUIyYzFYUGxFSnUwSDcyc25iV1N3TVpxTDNjUEdPTGZiaEdoWDljLTBJZXlzOWJld1cybWFReXVlMjJWLUx2ZUJnVEtFT0RVVDV0UHE3U3pHLWtoNWpybHFIMU0?oc=5" },
+
+    // ================= COUNTRY & MARKET (Malaysia / Bursa / ringgit) =================
+    { cat:"country", icon:"📊",
+      title:"Bursa Malaysia Extends Winning Streak to Seven Sessions on Late Buying",
+      topics:["Bursa","KLCI","Sentiment"],
+      source:"NST Online", date:"19 Jun 2026",
+      summary:"The benchmark index extended gains for a seventh straight session on late buying interest — a constructive tape for large-cap heavyweights such as PCG on the local bourse.",
+      url:"https://news.google.com/rss/articles/CBMivwFBVV95cUxQdXVMY1FDWXluTkk4QWNEQjFXUXpJUXFYX3lQV0FNM3h0YlVva3Vjd3lhLUdfc2lrOER3bzF1UjZrenltaExyM3FkdGQyYXB6ZEN5Z2NzZkp0dVUtczZWOWEyTENQUzBFUURvclpnYU0yT1RCdUtjS3ZXRFZQeHdvTzh4UUVnQVhSRnU1aFNrOS1jckZTZ1ZpNTRhRFhYNm00ZmROZEJJa09FTGFUeXl4dklKVWZVRDZmX1VBNGJ5SdIBxAFBVV95cUxOWG9GVHBaSjJqLW16Mmk3SUY3X2F3NEI0dkZPamJWZ3RYeVRSVmQzcEZYTTBiUUc4WXg2UU5HQTVydFBWdnZqanAxZzBOb1dhX1ZlN0tuWC1sbC1raGxhUXhPaXBLTjR4a0xJX2Excm5kcDN4MVhGTkRDNEVDSXl3UWR4TWE1ZmJtLTEyUVYyYmVxaDQ5SnN5bGJkdlVscWgyRzFQVUFiVEx5LWU4U0oyeVdORDVMTzdaUENTNzh5NWp6SmRM?oc=5" },
+
+    { cat:"country", icon:"🔄",
+      title:"Malaysian Equities Expected to Rebound in 2H 2026 on US-Iran Peace Deal — Affin Hwang",
+      topics:["Equities","2H 2026","Recovery"],
+      source:"The Edge Malaysia", date:"16 Jun 2026",
+      summary:"Affin Hwang expects Malaysian equities to recover in the second half of 2026 as a US-Iran peace deal eases the energy and geopolitical overhang — a tailwind for cyclical, commodity-linked names.",
+      url:"https://news.google.com/rss/articles/CBMiUEFVX3lxTE42RVl4SnhYeWZOakFjTlpybmREZmlRcjYxNnhTV0FRSjRnUE5tUzZTZE9wQjZXeG5NWGRhR3l3X1JWMllLSUk0dFhCTHFkYmQw?oc=5" },
+
+    { cat:"country", icon:"💵",
+      title:"Bursa Malaysia Extends Gains for Fifth Day; Ringgit Hits Seven-Week High",
+      topics:["Ringgit","FX","Bursa"],
+      source:"The Star", date:"7 May 2026",
+      summary:"A firmer ringgit and a five-day market advance — FX strength cuts the local-currency cost of imported feedstock and can lift sentiment toward exporters and large caps on Bursa.",
+      url:"https://news.google.com/rss/articles/CBMizAFBVV95cUxONXZQRkljYXJtOElpSmxHS0JsS2F0YVdaRFVnVW4xZVBiRmtqM0d3THhZOWVFcjRKOUZGTlhSc1VrU01LY3dxQVpkLTFpMmctV3pHOVQ1UWUyeEVIZ0U3Rm5zaVpXN3o1bm5CTS1odFZHbFJzaThUNGNxV2J0R2s1TV9DWGFFS0otQmlrV1NyZWpuYUlYTzR0NFlyZ2RvcG1FQm1MZWlIQUlqTHhuazkyZHRKQnJPOXJ6NmowaDlDcExFY0hZUHR5M1FlM2s?oc=5" },
+
+    { cat:"country", icon:"⚖️",
+      title:"Bursa Malaysia Seen Trading Range-Bound Next Week Amid Geopolitical Uncertainties",
+      topics:["Bursa","Volatility","Outlook"],
+      source:"The Malaysian Reserve", date:"20 Jun 2026",
+      summary:"Strategists expect the local market to stay range-bound near term as geopolitical uncertainty keeps investors cautious — a backdrop of choppy, headline-driven trading for index heavyweights.",
+      url:"https://news.google.com/rss/articles/CBMiwwFBVV95cUxPdnJoY2w0blJIOW12VkdDWW5wT1BmVm9oX0xOXzZnZWtXc3p2MFVFbGRPWl9GSW9wb0plWWt0MHd5Si1wRzVOT00tV1NDTkotQlZubjlHNDVXUnZid0pIa09ieDdVSklaek05VFNBb2F3QTBENXhjN04zX25OSno1RUhRdFUtYWhoMnVjVWdNYUZlWXNiOWJ0OWdGU01NQU93UUlwTkRsR0UxeWJacUM0aGV2UlFZRGZzVmtYeXI3c015Y1U?oc=5" },
+
+    { cat:"country", icon:"🛒",
+      title:"Buying in Consumer Stocks Helps Bursa Malaysia Close Slightly Higher",
+      topics:["Bursa","Rotation","Flows"],
+      source:"The Malaysian Reserve", date:"18 Jun 2026",
+      summary:"Sector rotation into consumer names nudged the index higher — a snapshot of the local flow picture that shapes near-term liquidity across the broader market.",
+      url:"https://news.google.com/rss/articles/CBMisgFBVV95cUxOZFBKSHIyM3JVUHJNVE5LUmdteVpYZ0dQTWNZeGdUamdTdDRULTBRVTF6MHJRTDh5dUlSY1JlZHdlYlp3UHIzenpGR1BFOTRxT2hmZzVVWk5ZMWlpVXRuT0ZMcHhWUGNMRk9nU3FDUUZ5cmRRUVBiazJYeU15UV8yRWNLY1d0SlFrYlJHRHpId003Zzh2VFd4N3R5YjJfaWJRdW5BUFQ5Y3FkNkpGRE9zY0ZB?oc=5" }
+  ];
+
+  const list  = document.getElementById('nf-list');
+  const tabs  = document.getElementById('nf-tabs');
+  const count = document.getElementById('nf-count');
+  let active  = 'all';
+
+  function render(){
+    const data = active === 'all' ? items : items.filter(i => i.cat === active);
+    count.textContent = data.length + (data.length === 1 ? ' result' : ' results');
+
+    let html = '';
+    if(active === 'all' || active === 'company') html += dataStrip();
+
+    if(!data.length){
+      html += '<div style="padding:36px 20px;text-align:center;color:var(--ink-soft);font-size:13px;">No items in this lens yet.</div>';
+    } else {
+      data.forEach(item => {
+        const c = CAT[item.cat];
+        const topics = item.topics.map(t =>
+          `<span class="topic" style="display:inline-block;background:#eef1f5;color:#445063;font-size:11px;font-weight:500;padding:2px 9px;border-radius:20px;margin:0 5px 5px 0;transition:.15s;">${t}</span>`
+        ).join('');
+        html += `
+        <div class="nf-item" style="display:flex;gap:15px;padding:18px 20px;border-bottom:1px solid var(--line);transition:background .15s;">
+          <div style="flex:none;width:48px;height:48px;border-radius:9px;background:var(--bg-soft);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:20px;">${item.icon}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="margin-bottom:6px;">
+              <span style="background:${c.bg};color:${c.fg};font-size:10.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;padding:3px 9px;border-radius:6px;">${c.label}</span>
+            </div>
+            <div style="font-weight:600;font-size:14.5px;line-height:1.35;margin-bottom:7px;">${item.title}</div>
+            <div style="margin-bottom:7px;">${topics}</div>
+            <div style="font-size:12px;color:var(--ink-soft);margin-bottom:8px;">
+              <span style="font-weight:600;color:var(--ink);">${item.source}</span> &nbsp;|&nbsp; ${item.date}
+            </div>
+            <div class="summary-text" style="font-size:13px;color:#3a4252;line-height:1.55;margin-bottom:10px;max-height:3.1em;overflow:hidden;transition:max-height .25s ease;">${item.summary}</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <a href="javascript:void(0)" class="view-more" style="font-size:12.5px;font-weight:600;color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent);padding-bottom:1px;transition:color .15s;">View More</a>
+              <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="read-original" style="font-size:12.5px;color:var(--ink-soft);text-decoration:none;display:flex;align-items:center;gap:4px;white-space:nowrap;transition:color .15s;">
+                Read original
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>`;
+      });
+    }
+    list.innerHTML = html;
+  }
+
+  // expand / collapse
+  list.addEventListener('click', e => {
+    const btn = e.target.closest('.view-more');
+    if(!btn) return;
+    const s = btn.closest('.nf-item').querySelector('.summary-text');
+    const open = s.style.maxHeight === 'none';
+    s.style.maxHeight = open ? '3.1em' : 'none';
+    btn.textContent = open ? 'View More' : 'View Less';
+  });
+
+  // tab filter
+  tabs.addEventListener('click', e => {
+    const b = e.target.closest('.nf-tab');
+    if(!b) return;
+    active = b.dataset.cat;
+    [...tabs.children].forEach(x => x.classList.toggle('active', x === b));
+    list.scrollTop = 0;
+    render();
+  });
+
+  // refresh
+  document.getElementById('nf-refresh').addEventListener('click', () => {
+    const s = document.getElementById('nf-spin');
+    s.style.animation = 'nfspin .6s linear';
+    s.addEventListener('animationend', () => s.style.animation = '', {once:true});
+    render();
+  });
+
+  tabs.querySelector('[data-cat="all"]').classList.add('active');
+  render();
+})();
+</script>
