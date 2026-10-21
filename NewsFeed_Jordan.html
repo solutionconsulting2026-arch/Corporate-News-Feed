@@ -1,267 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Apollo Tyres Amman | Director Hierarchy</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apollo Tyres Amman | News & Market Intelligence</title>
 <style>
-  :root {
-    --ink: #163b63;
-    --muted: #6480a0;
-    --line: #c7d8eb;
-    --border: #d3e1f0;
-    --teal: #00a99d;
-    --blue: #4d9dd2;
-    --bg: #f6f9fd;
-    --promoter: #009b88;
-    --neutral: #65758b;
-    --risk: #e84b61;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    padding: 16px 12px;
-    background: #f1f5fa;
-    color: var(--ink);
-    font-family: "Segoe UI", Arial, sans-serif;
-  }
-  .panel {
-    max-width: 1600px;
-    min-height: 700px;
-    margin: 0 auto;
-    overflow: hidden;
-    background: #fff;
-    border: 1px solid #dbe5f0;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(24, 57, 91, .04);
-  }
-  .topbar {
-    height: 74px;
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-    border-bottom: 1px solid #e3ebf4;
-  }
-  .topbar h1 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: .1px; }
-  .legendbar {
-    min-height: 40px;
-    padding: 0 20px;
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    border-bottom: 1px solid #e3ebf4;
-    color: var(--muted);
-    font-size: 11px;
-  }
-  .legend-item { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-  .dot.promoter { background: var(--promoter); }
-  .dot.neutral { background: var(--neutral); }
-  .dot.risk { background: var(--risk); }
-  .canvas {
-    position: relative;
-    min-height: 590px;
-    padding: 28px 24px 44px;
-    background-color: #fff;
-    background-image: radial-gradient(#d3e4f7 .9px, transparent .9px);
-    background-size: 17px 17px;
-  }
-  .tree { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 0; }
-  .level { position: relative; width: 100%; display: grid; justify-content: center; align-items: stretch; gap: 24px; }
-  .level-one { grid-template-columns: minmax(280px, 340px); margin-bottom: 52px; }
-  .level-two { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 40px; }
-  .level-three { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
-  .level-one::after {
-    content: ""; position: absolute; left: 50%; bottom: -27px; width: 1px; height: 27px;
-    background: var(--line); transform: translateX(-50%);
-  }
-  .level-two::before {
-    content: ""; position: absolute; top: -27px; left: 16%; right: 16%; height: 1px; background: var(--line);
-  }
-  .level-two .card::before {
-    content: ""; position: absolute; left: 50%; top: -27px; height: 27px; width: 1px;
-    background: var(--line); transform: translateX(-50%);
-  }
-  .level-two::after {
-    content: ""; position: absolute; left: 50%; bottom: -20px; height: 20px; width: 1px;
-    background: var(--line); transform: translateX(-50%);
-  }
-  .level-three .card::before {
-    content: ""; position: absolute; left: 50%; top: -20px; height: 20px; width: 1px;
-    background: var(--line); transform: translateX(-50%);
-  }
-  .level-three::before {
-    content: ""; position: absolute; top: -20px; left: 8.5%; right: 8.5%; height: 1px; background: var(--line);
-  }
-  .card {
-    min-width: 0;
-    min-height: 112px;
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px 15px;
-    border: 1px solid var(--border);
-    border-top: 3px solid var(--blue);
-    border-radius: 10px;
-    background: #fff;
-    box-shadow: 0 3px 8px rgba(28, 66, 106, .035);
-  }
-  .level-one .card { border-top-color: var(--teal); min-height: 112px; }
-  .avatar {
-    flex: 0 0 43px;
-    width: 43px; height: 43px;
-    border-radius: 11px;
-    display: flex; align-items: center; justify-content: center;
-    color: #00699b;
-    font-size: 14px; font-weight: 750;
-    background: #e6f5fb;
-    border: 1px solid #d0eaf5;
-  }
-  .details { min-width: 0; }
-  .name { margin: 0 0 5px; color: #153d66; font-size: 12px; line-height: 1.25; font-weight: 700; }
-  .role { margin: 0 0 7px; color: #45688e; font-size: 11px; line-height: 1.35; }
-  .department { margin: 0 0 7px; color: #7790ac; font-size: 10px; line-height: 1.3; }
-  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 20px; font-size: 9px; font-weight: 800; letter-spacing: .15px; line-height: 1.1; white-space: nowrap; }
-  .badge::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
-  .badge.promoter { color: #008f7d; background: #e5f7f3; }
-  .badge.neutral { color: #596b82; background: #edf1f6; }
-  .badge.risk { color: #d63e55; background: #fff0f2; }
-  .domain { font-size: 9px; color: #526f90; white-space: nowrap; }
-  @media (max-width: 1100px) {
-    .level-three { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 32px; }
-    .level-three::before { display: none; }
-    .level-two { gap: 14px; }
-    .card { padding: 13px 11px; }
-  }
-  @media (max-width: 720px) {
-    body { padding: 8px; }
-    .topbar { height: 62px; padding: 0 14px; }
-    .legendbar { padding: 10px 14px; flex-wrap: wrap; gap: 9px 14px; }
-    .canvas { padding: 24px 12px 35px; }
-    .level-one { margin-bottom: 36px; }
-    .level-two { grid-template-columns: 1fr; gap: 30px; margin-bottom: 30px; }
-    .level-two::before, .level-two::after, .level-two .card::before { display: none; }
-    .level-three { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 10px; }
-    .level-three .card::before { display: none; }
-    .card { min-height: 108px; }
-  }
-  @media print {
-    body { padding: 0; background: white; }
-    .panel { max-width: none; border: 0; box-shadow: none; }
-    .canvas { background-image: none; }
-  }
+  *{box-sizing:border-box}
+  :root{--ink:#1a2332;--ink-soft:#5b6577;--line:#e4e8ee;--bg:#fff;--bg-soft:#f7f8fa;--accent:#1676bd;--accent-dark:#0f568d;--teal:#0c9b91}
+  body{margin:0;padding:20px;background:#f1f4f8;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink)}
+  #nf360{max-width:1450px;margin:0 auto;background:var(--bg);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(21,38,62,.06)}
+  .header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 20px;border-bottom:1px solid var(--line)}
+  .heading{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap}.dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;flex:none}
+  .heading-title{font-weight:750;font-size:16px}.account-chip{background:#eaf3fb;color:#145d91;font-size:11.5px;font-weight:650;padding:5px 10px;border-radius:18px;white-space:nowrap}
+  .refresh{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}.refresh:hover{background:#f5f9fc;border-color:#c5d9e8}.refresh svg{transition:transform .2s}
+  #nf-tabs{display:flex;gap:7px;padding:12px 16px;flex-wrap:wrap;border-bottom:1px solid var(--line);background:#fff}
+  .nf-tab{border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-size:12.5px;font-weight:650;padding:8px 13px;border-radius:18px;cursor:pointer;transition:.15s}.nf-tab:hover{border-color:#b9cbd9;color:var(--ink)}.nf-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .meta{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 20px;background:var(--bg-soft);border-bottom:1px solid var(--line);font-size:12px;color:var(--ink-soft);flex-wrap:wrap}.meta-left{display:flex;align-items:center;gap:7px}
+  .scope-note{font-size:12px;color:#586579;line-height:1.5;padding:11px 20px;background:#fbfcfe;border-bottom:1px solid var(--line)}
+  #nf-list{max-height:760px;overflow:auto}
+  .data-strip{padding:16px 20px;border-bottom:1px solid var(--line);background:#fbfdff}.strip-title{display:flex;align-items:center;gap:8px;margin-bottom:11px;flex-wrap:wrap}.strip-label{background:#eaf3fb;color:#145d91;font-size:10.5px;font-weight:750;letter-spacing:.03em;text-transform:uppercase;padding:4px 9px;border-radius:6px}.strip-caption{font-size:11px;color:var(--ink-soft)}
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.kpi{background:#fff;border:1px solid var(--line);border-radius:9px;padding:11px 13px;min-width:0}.kpi-label{font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);font-weight:700}.kpi-value{font-size:17px;font-weight:750;margin-top:5px;overflow-wrap:anywhere}.kpi-sub{font-size:10.5px;color:var(--ink-soft);margin-top:3px;line-height:1.4}.source-note{font-size:10.5px;color:var(--ink-soft);margin-top:10px;line-height:1.5}
+  .nf-item{display:flex;gap:15px;padding:17px 20px;border-bottom:1px solid var(--line);transition:background .15s}.nf-item:last-child{border-bottom:none}.nf-item:hover{background:#fafbfd}.item-icon{flex:none;width:46px;height:46px;border-radius:10px;background:#f6f8fb;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:20px}.item-body{flex:1;min-width:0}.item-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}.category{font-size:10.5px;font-weight:750;letter-spacing:.02em;text-transform:uppercase;padding:4px 8px;border-radius:6px}.item-title{font-weight:700;font-size:14.5px;line-height:1.4;margin-bottom:6px}.topic{display:inline-block;background:#eef1f5;color:#445063;font-size:10.5px;font-weight:550;padding:3px 8px;border-radius:20px;margin:0 5px 5px 0}.item-source{font-size:11.5px;color:var(--ink-soft);margin:2px 0 8px}.item-source strong{color:var(--ink);font-weight:650}.summary-text{font-size:12.8px;color:#3a4252;line-height:1.58;margin-bottom:10px;max-height:4.75em;overflow:hidden;transition:max-height .25s ease}.item-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}.view-more,.read-original{font-size:12px;font-weight:650;color:var(--accent);text-decoration:none;border-bottom:1px solid #9bc5e6;padding-bottom:1px;cursor:pointer;background:none;border-top:0;border-left:0;border-right:0}.read-original{color:var(--ink-soft);border-color:transparent;display:flex;align-items:center;gap:5px;white-space:nowrap}.view-more:hover,.read-original:hover{color:var(--accent-dark)}.empty{padding:36px 20px;text-align:center;color:var(--ink-soft);font-size:13px}
+  @keyframes nfspin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:600px){body{padding:8px}.header{padding:13px}.heading-title{font-size:14px}.account-chip{font-size:10.5px}.nf-item{padding:14px 12px;gap:10px}.item-icon{width:38px;height:38px;font-size:17px}.meta{padding:9px 13px}.scope-note{padding:10px 13px}.data-strip{padding:13px}.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{padding:10px}.kpi-value{font-size:15px}}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
-  <main class="panel">
-    <header class="topbar"><h1>Director Hierarchy</h1></header>
-    <div class="legendbar" aria-label="Relationship legend">
-      <span class="legend-item"><span class="dot promoter"></span>Promoter · Highly engaged</span>
-      <span class="legend-item"><span class="dot neutral"></span>Neutral · Monitor</span>
-      <span class="legend-item"><span class="dot risk"></span>At risk · Follow up</span>
-    </div>
-    <section class="canvas" aria-label="Director hierarchy chart">
-      <div class="tree">
-        <div class="level level-one">
-          <article class="card">
-            <div class="avatar">OA</div>
-            <div class="details">
-              <p class="name">Omar Al-Khatib</p>
-              <p class="role">Regional Managing Director</p>
-              <p class="department">Middle East Leadership</p>
-              <div class="meta"><span class="badge promoter">PROMOTER</span><span class="domain">Regional leadership</span></div>
-            </div>
-          </article>
-        </div>
-        <div class="level level-two">
-          <article class="card">
-            <div class="avatar">LM</div>
-            <div class="details">
-              <p class="name">Lina Al-Masri</p>
-              <p class="role">Country General Manager</p>
-              <p class="department">Jordan Business Leadership</p>
-              <div class="meta"><span class="badge neutral">NEUTRAL</span><span class="domain">Country leadership</span></div>
-            </div>
-          </article>
-          <article class="card">
-            <div class="avatar">AH</div>
-            <div class="details">
-              <p class="name">Ahmad Al-Haddad</p>
-              <p class="role">Finance Director</p>
-              <p class="department">Finance &amp; Administration</p>
-              <div class="meta"><span class="badge promoter">PROMOTER</span><span class="domain">Finance</span></div>
-            </div>
-          </article>
-          <article class="card">
-            <div class="avatar">YN</div>
-            <div class="details">
-              <p class="name">Yazan Al-Najjar</p>
-              <p class="role">Supply Chain &amp; Operations Director</p>
-              <p class="department">Operations</p>
-              <div class="meta"><span class="badge neutral">NEUTRAL</span><span class="domain">Operations</span></div>
-            </div>
-          </article>
-        </div>
-        <div class="level level-three">
-          <article class="card">
-            <div class="avatar">SK</div>
-            <div class="details">
-              <p class="name">Sami Al-Khalidi</p>
-              <p class="role">Sales &amp; Dealer Network Manager</p>
-              <p class="department">Commercial</p>
-              <div class="meta"><span class="badge promoter">PROMOTER</span></div>
-            </div>
-          </article>
-          <article class="card">
-            <div class="avatar">KT</div>
-            <div class="details">
-              <p class="name">Kareem Al-Tamimi</p>
-              <p class="role">Key Accounts Manager</p>
-              <p class="department">Dealer Relationships</p>
-              <div class="meta"><span class="badge neutral">NEUTRAL</span></div>
-            </div>
-          </article>
-          <article class="card">
-            <div class="avatar">DR</div>
-            <div class="details">
-              <p class="name">Dana Abu-Rumman</p>
-              <p class="role">Treasury &amp; Banking Manager</p>
-              <p class="department">Treasury</p>
-              <div class="meta"><span class="badge promoter">PROMOTER</span></div>
-            </div>
-          </article>
-          <article class="card">
-            <div class="avatar">NH</div>
-            <div class="details">
-              <p class="name">Nour Al-Husseini</p>
-              <p class="role">Compliance &amp; Risk Manager</p>
-              <p class="department">Risk &amp; Compliance</p>
-              <div class="meta"><span class="badge risk">AT RISK</span></div>
-            </div>
-          </article>
-          <article class="card">
-            <div class="avatar">HA</div>
-            <div class="details">
-              <p class="name">Hala Al-Ajlouni</p>
-              <p class="role">Procurement Manager</p>
-              <p class="department">Procurement</p>
-              <div class="meta"><span class="badge neutral">NEUTRAL</span></div>
-            </div>
-          </article>
-          <article class="card">
-            <div class="avatar">FM</div>
-            <div class="details">
-              <p class="name">Fadi Mansour</p>
-              <p class="role">Logistics &amp; Distribution Manager</p>
-              <p class="department">Supply Chain</p>
-              <div class="meta"><span class="badge promoter">PROMOTER</span></div>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-  </main>
+<div id="nf360">
+  <div class="header">
+    <div class="heading"><span class="dot"></span><span class="heading-title">News &amp; Market Intelligence</span><span class="account-chip">Apollo Tyres · Amman, Jordan</span></div>
+    <button id="nf-refresh" class="refresh" title="Refresh panel" aria-label="Refresh panel"><svg id="nf-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg></button>
+  </div>
+  <div id="nf-tabs" role="tablist" aria-label="News categories">
+    <button class="nf-tab active" data-cat="all" role="tab" aria-selected="true">All</button>
+    <button class="nf-tab" data-cat="company" role="tab" aria-selected="false">Apollo Tyres</button>
+    <button class="nf-tab" data-cat="macro" role="tab" aria-selected="false">Macro Economics</button>
+    <button class="nf-tab" data-cat="competitor" role="tab" aria-selected="false">Competitors</button>
+    <button class="nf-tab" data-cat="country" role="tab" aria-selected="false">Jordan &amp; Market</button>
+  </div>
+  <div class="meta"><div class="meta-left"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span>Curated snapshot: 21 Oct 2026 · Sources and publication dates shown per item</span></div><div id="nf-count">— results</div></div>
+  <div class="scope-note"><strong>Scope note:</strong> This panel combines publicly reported Apollo Tyres group news, competitor updates, and Jordan market indicators relevant to a tyre business. It does not represent verified news, financials, transactions, or market share for a specific Apollo Tyres entity in Amman. Refresh re-renders this saved snapshot; it does not fetch live news.</div>
+  <div id="nf-list" aria-live="polite"></div>
+</div>
+<script>
+(function(){
+  const CAT={
+    company:{label:"Apollo Tyres",bg:"#e8f3fb",fg:"#145d91"},
+    macro:{label:"Macro Economics",bg:"#eaf1fb",fg:"#1f5bb5"},
+    competitor:{label:"Competitor",bg:"#fff1e8",fg:"#a64e17"},
+    country:{label:"Jordan & Market",bg:"#f1ecfb",fg:"#7144a6"}
+  };
+  // Global company indicators and Jordan-wide statistics only; no local account financials are inferred.
+  const KPI=[
+    {l:"Apollo brand strength",v:"80.59 / 100",s:"Global tyre-brand study · 2026",url:"https://apollovredestein.press/apollo-tyres-is-the-fastest-climber-in-brand-strength-rankings-for-2026/"},
+    {l:"Global brand ranking",v:"6th",s:"Apollo Tyres · Brand Finance 2026",url:"https://apollovredestein.press/apollo-tyres-is-the-fastest-climber-in-brand-strength-rankings-for-2026/"},
+    {l:"Jordan CPI inflation",v:"2.26%",s:"Jan–Sep 2026 vs same period 2025",url:"https://dosweb.dos.gov.jo/cpi_102026/"},
+    {l:"Jordan GDP growth",v:"3.0%",s:"Q2 2026 year-on-year",url:"https://dosweb.dos.gov.jo/"},
+    {l:"Jordan industrial output",v:"+3.34%",s:"Industrial production quantities · Aug 2026",url:"https://dosweb.dos.gov.jo/"},
+    {l:"Michelin 9M revenue",v:"€19.2bn",s:"Global peer · nine months to 30 Sep 2026",url:"https://www.michelin.com/en/publications/group/financial-information-at-september-30-2026"},
+    {l:"Michelin tyre volumes",v:"−0.8%",s:"Global peer · nine months to 30 Sep 2026",url:"https://www.michelin.com/en/publications/group/financial-information-at-september-30-2026"},
+    {l:"Jordan policy rate",v:"5.75%",s:"CBJ decision dated 18 Jun 2026",url:"https://www.cbj.gov.jo/EN/newsdetails/The_Open_Market_Operations_Committee_Decides_to_Maintain_%E2%80%9CKey_Interest_Rate_of_the_Central_Bank%E2%80%9D"}
+  ];
+  function dataStrip(){
+    const tiles=KPI.map(k=>`<a class="kpi" href="${k.url}" target="_blank" rel="noopener noreferrer" style="display:block;text-decoration:none;color:inherit"><div class="kpi-label">${k.l}</div><div class="kpi-value">${k.v}</div><div class="kpi-sub">${k.s}</div></a>`).join('');
+    return `<div class="data-strip"><div class="strip-title"><span class="strip-label">Company &amp; market context</span><span class="strip-caption">Publicly reported global company and Jordan-wide indicators—not Apollo Amman account metrics</span></div><div class="kpi-grid">${tiles}</div><div class="source-note">Select a tile to open its source. Figures retain the scope and dates stated by the source; the Central Bank of Jordan rate shown is the last official decision included in this snapshot (18 Jun 2026), not a claim that it has not changed since.</div></div>`;
+  }
+  const items=[
+    {cat:"company",icon:"🛞",title:"Apollo Tyres expands excavator portfolio with the AWE 733 flotation tyre",topics:["Off-highway tyres","Product launch","Construction"],source:"Apollo Tyres & Vredestein Newsroom",date:"29 Sep 2026",summary:"Apollo Tyres announced the AWE 733 flotation tyre for mobile excavators working on soft and sensitive terrain. The product is positioned for construction, infrastructure and utility applications, with low ground pressure, traction and durability as key design goals. Global sales were scheduled to commence in Q4 2026. Relevance to Jordan: a product line to monitor if the local business serves construction, utility or heavy-equipment fleets; local availability is not confirmed.",url:"https://apollovredestein.press/apollo-tyres-expands-excavator-portfolio-with-the-awe-733-flotation-tyre"},
+    {cat:"company",icon:"🚛",title:"Apollo Tyres presents a completed EnduMile long-haul tyre range",topics:["Truck & bus","Fleet economics","Product portfolio"],source:"Apollo Tyres & Vredestein Newsroom",date:"7 Sep 2026",summary:"Apollo Tyres announced three EnduMile long-haul tyres for steer and drive axle applications, completing its dedicated long-haul range. The company positions the line around mileage, fuel efficiency and durability for fleet operators. For an Amman-focused commercial conversation, the product range may be relevant to long-distance fleets and regional logistics customers, subject to local distribution and homologation checks.",url:"https://apollovredestein.press/apollo-tyres-to-unveil-full-endumile-long-haul-range-at-iaa-transportation"},
+    {cat:"company",icon:"🏅",title:"Apollo Tyres rises to sixth in 2026 global tyre-brand strength ranking",topics:["Brand","Customer engagement","Distribution"],source:"Apollo Tyres & Vredestein Newsroom citing Brand Finance",date:"9 Jun 2026",summary:"Apollo Tyres reported a Brand Strength Index score of 80.59 and a move from 13th place in 2025 to sixth in 2026 in the referenced global tyre-brand ranking. The company attributed improvement to marketing, product innovation, customer engagement and distribution initiatives. This is a global brand indicator, not a Jordan-specific market-share measure.",url:"https://apollovredestein.press/apollo-tyres-is-the-fastest-climber-in-brand-strength-rankings-for-2026"},
+    {cat:"company",icon:"📄",title:"Apollo Tyres investor announcements: October 2026 disclosures",topics:["Investor relations","Governance","Financial disclosures"],source:"Apollo Tyres Investor Relations",date:"6–14 Oct 2026",summary:"Apollo Tyres' investor-relations page lists several October disclosures, including share-capital audit and ISIN reporting items dated 14 October, postal ballot results dated 8 October, and a commercial-paper proceeds-utilisation disclosure dated 6 October. Review the official announcement list for source documents; the items should not be interpreted as local Amman operating updates.",url:"https://corporate.apollotyres.com/investors/announcements/"},
+    {cat:"macro",icon:"📈",title:"Jordan's consumer prices rose 2.26% in the first nine months of 2026",topics:["Inflation","Operating costs","Purchasing power"],source:"Jordan Department of Statistics",date:"20 Oct 2026",summary:"Jordan's Department of Statistics reported that consumer-price inflation reached 2.26% for January–September 2026 compared with the same period in 2025. September's CPI was 2.73% higher year-on-year and rose 0.16% from August. For a tyre distributor, this is a country-level context indicator for operating costs and consumer purchasing power; it does not measure tyre-price inflation specifically.",url:"https://dosweb.dos.gov.jo/cpi_102026/"},
+    {cat:"macro",icon:"🏛️",title:"Central Bank of Jordan maintained its key policy rate at 5.75% in June",topics:["Interest rates","Credit conditions","Liquidity"],source:"Central Bank of Jordan / Petra",date:"18 Jun 2026",summary:"The Central Bank of Jordan announced that it maintained its key policy rate at 5.75% at its fourth 2026 meeting. The announcement also described monetary-stability measures and foreign-currency reserves at the end of May 2026. This is the latest decision included in this snapshot; verify the central bank's site for any subsequent decision before using the rate in a current credit assessment.",url:"https://www.cbj.gov.jo/EN/newsdetails/The_Open_Market_Operations_Committee_Decides_to_Maintain_%E2%80%9CKey_Interest_Rate_of_the_Central_Bank%E2%80%9D"},
+    {cat:"macro",icon:"🌐",title:"IMF flags shipping, energy and infrastructure disruption as risks for the Middle East",topics:["Geopolitics","Shipping","Supply chain"],source:"Reuters reporting on IMF regional remarks",date:"15 Oct 2026",summary:"The IMF highlighted prolonged conflict and renewed disruptions to energy production, shipping or critical infrastructure as key downside risks for Middle East and Central Asian economies. For tyre imports and distribution, this is a risk lens for freight lead times, insurance costs, supplier diversification and inventory buffers—not a statement that Apollo Tyres Amman has experienced a disruption.",url:"https://www.reuters.com/world/asia-pacific/prolonged-war-renewed-disruptions-pose-biggest-risk-middle-east-region-imf-says-2026-10-15/"},
+    {cat:"competitor",icon:"📊",title:"Michelin reports €19.2 billion nine-month revenue; replacement demand more resilient",topics:["Peer results","Replacement tyres","Volumes"],source:"Michelin official financial release",date:"20 Oct 2026",summary:"Michelin reported €19.2 billion in revenue for the first nine months of 2026. Tyre volumes declined 0.8%, mainly reflecting weaker original-equipment sales, while Michelin-brand replacement volumes were up 4% at the end of September. This global peer update reinforces the importance of distinguishing replacement demand from original-equipment demand; it is not a direct proxy for Jordan demand.",url:"https://www.michelin.com/en/publications/group/financial-information-at-september-30-2026"},
+    {cat:"competitor",icon:"🏁",title:"Bridgestone announces 2026 updates across tyres and corporate operations",topics:["Competitor activity","Product strategy","Corporate"],source:"Bridgestone official newsroom",date:"Sep–Oct 2026",summary:"Bridgestone's official newsroom lists recent items including its Formula E tyre-supply partnership announcement on 1 October, a tyre launch on 14 September, and first-half 2026 business and financial results on 7 August. These are global competitor developments; the source does not establish specific market share or pricing in Jordan.",url:"https://www.bridgestone.com/corporate/news/"},
+    {cat:"competitor",icon:"⚙️",title:"Continental expands its large and ultra-high-performance tyre portfolio",topics:["Product range","Premium segment","EV / larger vehicles"],source:"Continental official press newsroom",date:"16 Sep 2026",summary:"Continental said it plans to add more than 650 tyre sizes across its product lines by the end of 2027, focusing on larger and high-performance tyres for original-equipment and replacement markets, including heavier and electrified vehicles. This signals continued portfolio competition in premium segments; Jordan-specific availability and sales volumes are not disclosed in the source.",url:"https://www.continental.com/en/press/press-releases/"},
+    {cat:"country",icon:"🏭",title:"Jordan reports 3.34% increase in industrial production quantities for August 2026",topics:["Industry","Demand context","Jordan"],source:"Jordan Department of Statistics",date:"20 Oct 2026",summary:"Jordan's Department of Statistics published an update reporting that industrial production quantities increased 3.34% in August 2026. The indicator offers broad context for industrial activity and potential demand from business fleets, but it is not an automotive or tyre-market growth statistic.",url:"https://dosweb.dos.gov.jo/"},
+    {cat:"country",icon:"📉",title:"Jordan's GDP grew 3.0% year-on-year in Q2 2026",topics:["GDP","Business conditions","Jordan"],source:"Jordan Department of Statistics",date:"6 Oct 2026",summary:"Jordan's Department of Statistics reported that real GDP grew 3.0% in Q2 2026 compared with 2.8% in Q2 2025. This provides country-level background for corporate demand planning. It should be used alongside company-specific sales, vehicle registrations, fleet activity and import data rather than as a direct forecast for tyre sales.",url:"https://dosweb.dos.gov.jo/"},
+    {cat:"country",icon:"🚢",title:"Global trade outlook remains exposed to Middle East disruption and route changes",topics:["Trade flows","Logistics","Import exposure"],source:"Reuters reporting on WTO remarks",date:"15 Oct 2026",summary:"The WTO chief warned that geopolitical conflict, particularly in the Middle East, could have lasting effects on trade and supply-chain routes. For a Jordan-based tyre business that imports products or materials, this is a reminder to monitor freight routes, supplier concentration, delivery timelines and landed costs. This is regional context, not evidence of a company-specific supply issue.",url:"https://www.reuters.com/business/wto-chief-sees-lasting-impact-on-trade-from-middle-east-war-geopolitics-2026-10-15/"}
+  ];
+  const list=document.getElementById('nf-list'),tabs=document.getElementById('nf-tabs'),count=document.getElementById('nf-count');
+  let active='all';
+  function render(){
+    const data=active==='all'?items:items.filter(i=>i.cat===active);
+    count.textContent=data.length+(data.length===1?' result':' results');
+    let html='';
+    if(active==='all'||active==='company')html+=dataStrip();
+    if(!data.length){html+='<div class="empty">No items in this category.</div>';}
+    else data.forEach((item,index)=>{
+      const c=CAT[item.cat];
+      const topics=item.topics.map(t=>`<span class="topic">${t}</span>`).join('');
+      html+=`<article class="nf-item"><div class="item-icon" aria-hidden="true">${item.icon}</div><div class="item-body"><div class="item-top"><span class="category" style="background:${c.bg};color:${c.fg}">${c.label}</span></div><div class="item-title">${item.title}</div><div>${topics}</div><div class="item-source"><strong>${item.source}</strong> &nbsp;·&nbsp; ${item.date}</div><div class="summary-text">${item.summary}</div><div class="item-actions"><button type="button" class="view-more">View More</button><a href="${item.url}" target="_blank" rel="noopener noreferrer" class="read-original">Read source <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a></div></div></article>`;
+    });
+    list.innerHTML=html;
+  }
+  list.addEventListener('click',e=>{
+    const btn=e.target.closest('.view-more');if(!btn)return;
+    const s=btn.closest('.nf-item').querySelector('.summary-text');
+    const expanded=s.style.maxHeight==='none';s.style.maxHeight=expanded?'4.75em':'none';btn.textContent=expanded?'View More':'View Less';
+  });
+  tabs.addEventListener('click',e=>{
+    const b=e.target.closest('.nf-tab');if(!b)return;
+    active=b.dataset.cat;
+    [...tabs.querySelectorAll('.nf-tab')].forEach(x=>{const selected=x===b;x.classList.toggle('active',selected);x.setAttribute('aria-selected',String(selected));});
+    list.scrollTop=0;render();
+  });
+  document.getElementById('nf-refresh').addEventListener('click',()=>{
+    const s=document.getElementById('nf-spin');s.style.animation='nfspin .6s linear';s.addEventListener('animationend',()=>s.style.animation='',{once:true});render();
+  });
+  render();
+})();
+</script>
 </body>
 </html>
